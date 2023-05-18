@@ -23,6 +23,7 @@ using Linkit.Organization;
 using LWall = Linkit.BuiltElements.Main.Wall;
 using LDoor = Linkit.BuiltElements.Other.Door;
 using LWindow = Linkit.BuiltElements.Other.Window;
+using Linkit.BuiltElements.Style;
 
 namespace revit2linko_WPF
 {
@@ -42,6 +43,8 @@ namespace revit2linko_WPF
             FilteredElementCollector revitColumns = new FilteredElementCollector(doc);
             FilteredElementCollector revitBeams = new FilteredElementCollector(doc);
             FilteredElementCollector revitSlabs = new FilteredElementCollector(doc);
+            FilteredElementCollector revitDoors = new FilteredElementCollector(doc);
+            FilteredElementCollector revitWindows = new FilteredElementCollector(doc);
 
             //过滤，墙元素
             //快速过滤（category)
@@ -49,6 +52,8 @@ namespace revit2linko_WPF
             ICollection<Element> columnElements = revitColumns.OfCategory(BuiltInCategory.OST_StructuralColumns).OfClass(typeof(Autodesk.Revit.DB.FamilyInstance)).ToElements();
             ICollection<Element> beamElements = revitBeams.OfCategory(BuiltInCategory.OST_StructuralFraming).OfClass(typeof(Autodesk.Revit.DB.FamilyInstance)).ToElements();
             ICollection<Element> floorElements = revitSlabs.OfClass(typeof(Autodesk.Revit.DB.Floor)).ToElements();
+            ICollection<Element> doorElements = revitDoors.OfCategory(BuiltInCategory.OST_Doors).OfClass(typeof(Autodesk.Revit.DB.FamilyInstance)).ToElements();
+            ICollection<Element> windowElements = revitWindows.OfCategory(BuiltInCategory.OST_Windows).OfClass(typeof(Autodesk.Revit.DB.FamilyInstance)).ToElements();
 
             //2 获取Wall的参数
             List<LWall> walls_linko = new List<LWall>();
@@ -59,7 +64,6 @@ namespace revit2linko_WPF
 
             foreach (var revitWall in wallElements)
             {
-
                 if (revitWall != null)
                 {
                     Autodesk.Revit.DB.Wall revitWall_Instance = revitWall as Autodesk.Revit.DB.Wall;
@@ -87,13 +91,15 @@ namespace revit2linko_WPF
                     wallStyle.Name = wallName;
                     wallStyle.FamilyName = familyName;
 
+                    //2 创建Wall
+                    Linkit.BuiltElements.Main.Wall wall = new Linkit.BuiltElements.Main.Wall(wallLine_Linko, height, wallStyle);//尽量填充剩余的可选参数参数
+                    walls_linko.Add(wall);
+                    
+                    idMapping[revitWall.Id] = wall;
+
                     //TaskDialog.Show("Wall Info", $"Wall: {revitWall_Instance.Id}\nWall Line: {wallLine}\nWall Name: {wallName}\nFamily Name: {familyName}");
                 }
             }
-            //2 创建Wall
-            Linkit.BuiltElements.Main.Wall wall = new Linkit.BuiltElements.Main.Wall(wallLine_Linko, height, wallStyle);//尽量填充剩余的可选参数参数
-            walls_linko.Add(wall);
-
 
             //3 获取Column的参数
             List<Column> columns_linko = new List<Column>();
@@ -105,13 +111,13 @@ namespace revit2linko_WPF
 
                 Autodesk.Revit.DB.XYZ column_point = (revitColumn.Location as LocationPoint).Point;
 
-                Objects.Geometry.Point origin = new Objects.Geometry.Point(column_point.X * 304.8, column_point.Y * 304.8, column_point.Z * 304.8 + bottom_offset,"mm");
+                Objects.Geometry.Point origin = new Objects.Geometry.Point(column_point.X * 304.8, column_point.Y * 304.8, column_point.Z * 304.8 + bottom_offset, "mm");
 
                 Objects.Geometry.Vector vector_x = new Objects.Geometry.Vector(1000, 0, 0, "mm");
                 Objects.Geometry.Vector vector_y = new Objects.Geometry.Vector(0, 1000, 0, "mm");
                 Objects.Geometry.Vector vector_z = new Objects.Geometry.Vector(0, 0, 1000, "mm");
 
-                Objects.Geometry.Plane location = new Objects.Geometry.Plane(origin, vector_z, vector_x, vector_y,"mm");
+                Objects.Geometry.Plane location = new Objects.Geometry.Plane(origin, vector_z, vector_x, vector_y, "mm");
                 //
                 Linkit.BuiltElements.Style.ColumnStyle columnStyle = new Linkit.BuiltElements.Style.ColumnStyle();
                 var profile = new Linkit.Other.Profiles.RectangularProfile();
@@ -150,7 +156,7 @@ namespace revit2linko_WPF
             //4 获取Slab的参数
             List<Slab> slabs_linko = new List<Slab>();
             foreach (Floor floorInstance in floorElements)
-            {                        
+            {
                 Options options = new Options();
                 options.ComputeReferences = true;
                 options.IncludeNonVisibleObjects = true;
@@ -200,7 +206,6 @@ namespace revit2linko_WPF
                 // 获取楼板类型名称
                 string typeName = floorInstance.FloorType.Name;
 
-                //...
                 Linkit.BuiltElements.Style.SlabStyle slabStyle = new Linkit.BuiltElements.Style.SlabStyle();
                 slabStyle.ArchThickness = 50;
                 slabStyle.StructThickness = thickness - 50; //内置 单位mm
@@ -257,7 +262,7 @@ namespace revit2linko_WPF
                             {
                                 profile.Width = Convert.ToDouble((widthParam.AsDouble() * 304.8).ToString("F2")); // 转换为米,保留两位小数                             
                                 profile.Height = Convert.ToDouble((heightParam.AsDouble() * 304.8).ToString("F2")); // 转换为米,保留两位小数                           
-                                                                                                                     //TaskDialog.Show("Column Section Info", $"Column: {revitColumnInstance.Id}\nWidth: {profile.Width} m\nHeight: {profile.Height} m");
+                                                                                                                    //TaskDialog.Show("Column Section Info", $"Column: {revitColumnInstance.Id}\nWidth: {profile.Width} m\nHeight: {profile.Height} m");
                             }
                         }
                     }
@@ -278,52 +283,97 @@ namespace revit2linko_WPF
                     Beam beam = new Beam(line, beamStyle, level_linko);//尽量填充剩余的可选参数参数
                     beams_linko.Add(beam);
                 }
-                catch 
+                catch
                 {
                     TaskDialog.Show("提示框", "弯梁还不能上传");
                 }//...
-                
+
             }
 
-           
+
             //7 获取Door的参数
+
             List<LDoor> doors_linko = new List<LDoor>();
-            //创建Door
+            foreach (var revitDoor in doorElements)
+            {
+                if (revitDoor != null)
+                {
+                   
+                    double x = ((LocationPoint)revitDoor.Location).Point.X * 304.8;
+                    //double start_x = 0;
+                    double y = ((LocationPoint)revitDoor.Location).Point.Y * 304.8;
+                    double z = ((LocationPoint)revitDoor.Location).Point.Z * 304.8;
+
+                    Objects.Geometry.Point origin = new Objects.Geometry.Point(x, y, z, "mm");
+
+                    Objects.Geometry.Vector vector_x = new Objects.Geometry.Vector(1000, 0, 0, "mm");
+                    Objects.Geometry.Vector vector_y = new Objects.Geometry.Vector(0, 1000, 0, "mm");
+                    Objects.Geometry.Vector vector_z = new Objects.Geometry.Vector(0, 0, 1000, "mm");
+
+                    Objects.Geometry.Plane location = new Objects.Geometry.Plane(origin, vector_z, vector_x, vector_y, "mm");
+
+                    FamilyInstance door = revitDoor as Autodesk.Revit.DB.FamilyInstance;                    
+
+                    DoorStyle doorStyle = new DoorStyle();
+                    doorStyle.FamilyName = door.Symbol.Family.Name;
+                    doorStyle.TypeName = door.Symbol.Name;
+                    Autodesk.Revit.DB.Wall host_revit = (Autodesk.Revit.DB.Wall)door.Host;                    
+                    LWall host = idMapping[host_revit.Id];
+                    //创建Door
+                    LDoor lDoor = new LDoor(location, doorStyle, host);
+                    doors_linko.Add(lDoor);
+                }
+            }
+                                  
 
             //8 获取Windows的参数
             List<LWindow> windows_linko = new List<LWindow>();
-            //创建Windows
+            foreach (var revitWindow in windowElements)
+            {
+                if (revitWindow != null)
+                {
 
+                    double x = ((LocationPoint)revitWindow.Location).Point.X * 304.8;
+                    //double start_x = 0;
+                    double y = ((LocationPoint)revitWindow.Location).Point.Y * 304.8;
+                    double z = ((LocationPoint)revitWindow.Location).Point.Z * 304.8;
 
+                    Objects.Geometry.Point origin = new Objects.Geometry.Point(x, y, z, "mm");
+
+                    Objects.Geometry.Vector vector_x = new Objects.Geometry.Vector(1000, 0, 0, "mm");
+                    Objects.Geometry.Vector vector_y = new Objects.Geometry.Vector(0, 1000, 0, "mm");
+                    Objects.Geometry.Vector vector_z = new Objects.Geometry.Vector(0, 0, 1000, "mm");
+
+                    Objects.Geometry.Plane location = new Objects.Geometry.Plane(origin, vector_z, vector_x, vector_y, "mm");
+
+                    FamilyInstance window = revitWindow as Autodesk.Revit.DB.FamilyInstance;
+
+                    WindowStyle windowStyle = new WindowStyle();
+                    windowStyle.FamilyName = window.Symbol.Family.Name;
+                    windowStyle.TypeName = window.Symbol.Name;
+                    Autodesk.Revit.DB.Wall host_revit = (Autodesk.Revit.DB.Wall)window.Host;
+                    LWall host = idMapping[host_revit.Id];
+                    //创建Windows
+                    LWindow lWindow = new LWindow(location, windowStyle, host);
+                    windows_linko.Add(lWindow);
+                }
+            }
 
             List<Module> modules_linko = new List<Module>();
             List<Room> rooms_linko = new List<Room>();
-            //1 读取当前文档中的各种构件
-            //List<Column> columns_linko = columns;
-            //2 创建Commit
-            // Modules = modules;
-            //Rooms = rooms;
-            //Columns = columns;
-            //Beams = beams;
-            //Slabs = slabs;
-            //Walls = walls;
-            //Doors = doors;
-            //Windows = windows;
 
             ProjectCommitData projectCommitData = new ProjectCommitData(modules_linko,rooms_linko,columns_linko,beams_linko,slabs_linko,walls_linko,doors_linko,windows_linko);
-            //StructureGeneration commitData = new StructureGeneration(columns_linko, beams_linko, slabs_linko);
-            // 这里用了StructureGeneration，但是这里面只有梁板柱，所以可能需要Linkit定义一种新的commitData，能包含你要上传的所有数据
-            // 或者你创建多个commitData，有建筑的，结构的，机电的，分多次commit上传到多个不同的branch
+            
             CommitMetaData commitMetaData = new CommitMetaData("version..", "dependentVersion...", Role.User);
             Linkit.Commits.Commit commit = new Linkit.Commits.Commit(projectCommitData, commitMetaData);
 
-            //3 上传
+            //3 上
             var token = "5bfe6d6730f385a94752f292683608bdf45218d58a";
             var streamId = "594bb8dc86";
-            var branchName = BranchName;
-            var message_linko = Message_linko;
-            //var branchName = "test_yjk";
-            //var message_linko = "all";
+            //var branchName = BranchName;
+            //var message_linko = Message_linko;
+            var branchName = "test_yjk";
+            var message_linko = "wall";
 
             Task createCommit = new Task(async () =>
             await Core.LinkoUtils.CreateSpeckleCommit(commit, token, streamId, branchName, message_linko));
@@ -341,6 +391,7 @@ namespace revit2linko_WPF
             //}
 
         }
+        readonly Dictionary<ElementId,LWall> idMapping = new Dictionary<ElementId, LWall>();
 
         public string GetName()
         {

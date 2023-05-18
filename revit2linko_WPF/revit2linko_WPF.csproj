@@ -221,7 +221,6 @@
     <Compile Include="Speckle_copy\Operations.Receive.cs" />
     <Compile Include="Speckle_copy\Operations.Send.cs" />
     <Compile Include="Speckle_copy\Operations.Serialize.cs" />
-    <Compile Include="upload\upload_all_project_test.cs" />
     <Compile Include="upload\upload_all_project.cs" />
     <Compile Include="upload\upload_beam_select.cs" />
     <Compile Include="upload\upload_beam.cs" />

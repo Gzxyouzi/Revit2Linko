@@ -1,8 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.Attributes;
-using SpeckleCore;
-using Speckle.Core;
 using Linkit;
 using Linkit.BuiltElements.Main;
 using Linkit.Commits;

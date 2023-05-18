@@ -44,8 +44,8 @@ namespace revit2linko_WPF
         Create_limian create_LimianCommand = null;
         ExternalEvent create_LimianEvent = null;
 
-        upload_all_project_TEST upload_All_Project_TESTCommand = null;
-        ExternalEvent upload_All_Project_TESTEvent = null;
+        upload_all_project upload_All_ProjectCommand = null;
+        ExternalEvent upload_All_ProjectEvent = null;
 
         public MainWindow()
         {
@@ -70,17 +70,17 @@ namespace revit2linko_WPF
             create_LimianCommand = new Create_limian();
             create_LimianEvent = ExternalEvent.Create(create_LimianCommand);
 
-            upload_All_Project_TESTCommand = new upload_all_project_TEST();
-            upload_All_Project_TESTEvent = ExternalEvent.Create(upload_All_Project_TESTCommand);
+            upload_All_ProjectCommand = new upload_all_project();
+            upload_All_ProjectEvent = ExternalEvent.Create(upload_All_ProjectCommand);
             //
             List<string> dicItem = new List<string>
             {
-                "整个模型",
+                "整个结构模型",
                 "梁_beam",
                 "柱_column",
                 "板_slab",
                 "梁_beam_selectone",
-                "test_wall/door/window"
+                "BIM审图模型"
             };
 
             Model_select_comboBox.ItemsSource = dicItem;
@@ -126,9 +126,9 @@ namespace revit2linko_WPF
             else if (Model_select_comboBox.SelectedIndex == 5)//test_wall/door/window
             {
 
-                upload_All_Project_TESTCommand.BranchName = branchName_text.Text;
-                upload_All_Project_TESTCommand.Message_linko = Message_text.Text;
-                upload_All_Project_TESTEvent.Raise();
+                upload_All_ProjectCommand.BranchName = branchName_text.Text;
+                upload_All_ProjectCommand.Message_linko = Message_text.Text;
+                upload_All_ProjectEvent.Raise();
             }
         }
 
