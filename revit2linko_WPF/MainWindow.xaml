@@ -1,0 +1,19 @@
+﻿<Window x:Class="revit2linko_WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:revit2linko_WPF"
+        mc:Ignorable="d"
+        Title="revit2linko" Height="300" Width="300">
+    <Grid Background="AliceBlue">
+        <Button x:Name="upload" Content="上传" HorizontalAlignment="Left" Height="27" Margin="22,130,0,0" VerticalAlignment="Top" Width="98" RenderTransformOrigin="0.16,-0.834" Click="upload_Click"/>
+        <Button x:Name="limian" Content="下载立面" HorizontalAlignment="Left" Height="27" Margin="22,178,0,0" VerticalAlignment="Top" Width="98" RenderTransformOrigin="0.16,-0.834" Click="limian_Click"/>
+        <Label x:Name="branchName" Content="branchName" HorizontalAlignment="Left" Height="27" Margin="22,23,0,0" VerticalAlignment="Top" Width="109"/>
+        <Label x:Name="Message" Content="Message" HorizontalAlignment="Left" Height="27" Margin="22,58,0,0" VerticalAlignment="Top" Width="109"/>
+        <Label x:Name="Model_select" Content="模型选择" HorizontalAlignment="Left" Height="27" Margin="22,93,0,0" VerticalAlignment="Top" Width="109"/>
+        <TextBox x:Name="branchName_text" HorizontalAlignment="Left" Height="22" Margin="140,27,0,0" TextWrapping="Wrap"  VerticalAlignment="Top" Width="123"/>
+        <TextBox x:Name="Message_text" HorizontalAlignment="Left" Height="22" Margin="140,58,0,0" TextWrapping="Wrap"  VerticalAlignment="Top" Width="123"/>
+        <ComboBox x:Name="Model_select_comboBox" HorizontalAlignment="Left" Height="24" Margin="140,93,0,0" VerticalAlignment="Top" Width="123"/>
+    </Grid>
+</Window>
